@@ -4,12 +4,14 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/offerni/imagenaerum/img"
 )
 
 func (srv Server) ImageBlurCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		log.Println(err)
-		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -18,11 +20,13 @@ func (srv Server) ImageBlurCreate(w http.ResponseWriter, r *http.Request) {
 	sigmaFoat, err := strconv.ParseFloat(sigma, 64)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Unable to parse sigma", http.StatusBadRequest)
 	}
 
-	if err := srv.ImgService.Blur(files, sigmaFoat); err != nil {
-		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+	if err := srv.ImgService.Blur(img.BlurOpts{
+		Files: files,
+		Sigma: sigmaFoat,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
 	w.WriteHeader(http.StatusNoContent)

@@ -13,17 +13,23 @@ import (
 	"github.com/offerni/imagenaerum/utils"
 )
 
-func (svc *Service) Blur(files []*multipart.FileHeader, sigma float64) error {
+const maxSizeMB = 5
+const maxSizeBytes = maxSizeMB * 1024 * 1024
+
+func (svc *Service) Blur(opts BlurOpts) error {
+	if err := opts.Validate(); err != nil {
+		return err
+	}
 	var wg sync.WaitGroup
 
-	errCh := make(chan error, len(files))
+	errCh := make(chan error, len(opts.Files))
 
-	for _, file := range files {
+	for _, file := range opts.Files {
 		wg.Add(1)
 		go func(file *multipart.FileHeader) {
 			defer wg.Done()
 			fmt.Printf("Processing file: %s at: %v\n", file.Filename, time.Now().Format("2006-01-02 15:04:05.000"))
-			if err := svc.processFileBlur(file, sigma); err != nil {
+			if err := svc.processFileBlur(file, opts.Sigma); err != nil {
 				errCh <- err
 			}
 
@@ -80,6 +86,29 @@ func (svc Service) processFileBlur(file *multipart.FileHeader, sigma float64) er
 	// removing files at the end of the processing
 	if err := os.Remove(fileRawPath); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+type BlurOpts struct {
+	Files []*multipart.FileHeader
+	Sigma float64
+}
+
+func (opts BlurOpts) Validate() error {
+	if len(opts.Files) == 0 {
+		return ErrNoFiles
+	}
+
+	if opts.Sigma == 0 {
+		return ErrNoSigma
+	}
+
+	for _, file := range opts.Files {
+		if file.Size > maxSizeBytes {
+			return ErrInvalidSize
+		}
 	}
 
 	return nil
