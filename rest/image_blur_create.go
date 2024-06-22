@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (srv Server) ImageBlur(w http.ResponseWriter, r *http.Request) {
+func (srv Server) ImageBlurCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		log.Println(err)
 		http.Error(w, "Unable to parse form", http.StatusBadRequest)

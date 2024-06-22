@@ -1,7 +1,10 @@
 package rest
 
-import "github.com/go-chi/chi"
+import (
+	"github.com/go-chi/chi"
+)
 
 func initializeRoutes(mux *chi.Mux, srv Server) {
-	mux.Post("/blur", srv.ImageBlur)
+	mux.Post("/blur", srv.ImageBlurCreate)
+	mux.Get("/files/{id}", srv.FileFetch)
 }

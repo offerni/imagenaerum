@@ -5,6 +5,8 @@ import (
 	"io"
 	"mime/multipart"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
@@ -12,8 +14,33 @@ import (
 )
 
 func (svc *Service) Blur(files []*multipart.FileHeader, sigma float64) error {
+	var wg sync.WaitGroup
+
+	errCh := make(chan error, len(files))
+
 	for _, file := range files {
-		svc.processFileBlur(file, sigma)
+		wg.Add(1)
+		go func(file *multipart.FileHeader) {
+			defer wg.Done()
+			fmt.Printf("Processing file: %s at: %v\n", file.Filename, time.Now().Format("2006-01-02 15:04:05.000"))
+			if err := svc.processFileBlur(file, sigma); err != nil {
+				errCh <- err
+			}
+
+		}(file)
+	}
+
+	// Wait until all threads are done and close the error channel
+	go func() {
+		wg.Wait()
+		close(errCh)
+	}()
+
+	// check for errors in the channel
+	for err := range errCh {
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

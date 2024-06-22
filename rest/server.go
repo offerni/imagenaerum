@@ -21,7 +21,6 @@ const defaultport string = "8080"
 type Server struct {
 	HttpSrv    *http.Server
 	ImgService img.Service
-	Port       string
 }
 
 type NewServerOpts struct {
