@@ -2,9 +2,9 @@ package img
 
 type ImagingClient struct{}
 
-type service struct {
+type Service struct {
 }
 
-func NewService() *service {
-	return &service{}
+func NewService() *Service {
+	return &Service{}
 }

@@ -1,11 +1,9 @@
 package main
 
 import (
-	"github.com/offerni/imagenaerum/img"
+	"github.com/offerni/imagenaerum/rest"
 )
 
 func main() {
-	if err := img.Blur("./files/raw/imgtest.jpg", 2); err != nil {
-		panic(err)
-	}
+	rest.InitializeServer()
 }
