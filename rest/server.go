@@ -98,7 +98,3 @@ func NewServer(opts NewServerOpts) *Server {
 		ImgService: opts.ImgService,
 	}
 }
-
-func initializeRoutes(mux *chi.Mux, srv Server) {
-	mux.Get("/blur", srv.ImageBlur)
-}

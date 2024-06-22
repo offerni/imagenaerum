@@ -2,23 +2,49 @@ package img
 
 import (
 	"fmt"
+	"io"
+	"mime/multipart"
+	"os"
 
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
+	"github.com/offerni/imagenaerum/utils"
 )
 
-const convertedPath string = "./files/converted"
+func (svc *Service) Blur(files []*multipart.FileHeader, sigma float64) error {
+	for _, file := range files {
+		f, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer f.Close()
 
-func (svc *Service) Blur(path string, sigma float64) error {
-	src, err := imaging.Open(path)
-	if err != nil {
-		return err
-	}
+		fileRawPath := fmt.Sprintf("%s/%s", utils.RawPath, file.Filename)
+		dst, err := os.Create(fileRawPath)
+		if err != nil {
+			return err
+		}
+		defer dst.Close()
 
-	img := imaging.Blur(src, sigma)
-	fileName := uuid.New().String()
-	if err := imaging.Save(img, fmt.Sprintf("%s/%s.jpg", convertedPath, fileName)); err != nil {
-		return err
+		if _, err := io.Copy(dst, f); err != nil {
+			return err
+		}
+
+		src, err := imaging.Open(fileRawPath)
+		if err != nil {
+			return err
+		}
+
+		fileName := uuid.New().String()
+		fileCOnvertedPath := fmt.Sprintf("%s/%s.jpg", utils.ConvertedPath, fileName)
+
+		img := imaging.Blur(src, sigma)
+		if err := imaging.Save(img, fileCOnvertedPath); err != nil {
+			return err
+		}
+
+		// removing files at the end of the processing
+		os.Remove(fileRawPath)
 	}
 
 	return nil
