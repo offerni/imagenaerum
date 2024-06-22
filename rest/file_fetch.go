@@ -9,7 +9,7 @@ import (
 	"github.com/offerni/imagenaerum/utils"
 )
 
-func (srv Server) FileFetch(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) FileFetch(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	filePath := filepath.Join(utils.ConvertedPath, id)

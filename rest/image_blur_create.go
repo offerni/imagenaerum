@@ -8,7 +8,7 @@ import (
 	"github.com/offerni/imagenaerum/img"
 )
 
-func (srv Server) ImageBlurCreate(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) ImageBlurCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
