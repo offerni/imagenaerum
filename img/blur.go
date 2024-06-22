@@ -13,38 +13,46 @@ import (
 
 func (svc *Service) Blur(files []*multipart.FileHeader, sigma float64) error {
 	for _, file := range files {
-		f, err := file.Open()
-		if err != nil {
-			return err
-		}
-		defer f.Close()
+		svc.processFileBlur(file, sigma)
+	}
 
-		fileRawPath := fmt.Sprintf("%s/%s", utils.RawPath, file.Filename)
-		dst, err := os.Create(fileRawPath)
-		if err != nil {
-			return err
-		}
-		defer dst.Close()
+	return nil
+}
 
-		if _, err := io.Copy(dst, f); err != nil {
-			return err
-		}
+func (svc Service) processFileBlur(file *multipart.FileHeader, sigma float64) error {
+	f, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 
-		src, err := imaging.Open(fileRawPath)
-		if err != nil {
-			return err
-		}
+	fileRawPath := fmt.Sprintf("%s/%s", utils.RawPath, file.Filename)
+	dst, err := os.Create(fileRawPath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
 
-		fileName := uuid.New().String()
-		fileCOnvertedPath := fmt.Sprintf("%s/%s.jpg", utils.ConvertedPath, fileName)
+	if _, err := io.Copy(dst, f); err != nil {
+		return err
+	}
 
-		img := imaging.Blur(src, sigma)
-		if err := imaging.Save(img, fileCOnvertedPath); err != nil {
-			return err
-		}
+	src, err := imaging.Open(fileRawPath)
+	if err != nil {
+		return err
+	}
 
-		// removing files at the end of the processing
-		os.Remove(fileRawPath)
+	fileName := uuid.New().String()
+	fileCOnvertedPath := fmt.Sprintf("%s/%s.jpg", utils.ConvertedPath, fileName)
+
+	img := imaging.Blur(src, sigma)
+	if err := imaging.Save(img, fileCOnvertedPath); err != nil {
+		return err
+	}
+
+	// removing files at the end of the processing
+	if err := os.Remove(fileRawPath); err != nil {
+		return err
 	}
 
 	return nil
