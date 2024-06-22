@@ -6,12 +6,6 @@ import (
 )
 
 func main() {
-	ensureDirectories()
+	utils.EnsureDirectories()
 	rest.InitializeServer()
-}
-
-func ensureDirectories() {
-	for _, dir := range utils.Directories {
-		utils.EnsureDir(dir)
-	}
 }

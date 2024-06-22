@@ -9,12 +9,12 @@ import (
 const ConvertedPath string = "./files/converted"
 const RawPath string = "./files/raw"
 
-var Directories = []string{
+var directories = []string{
 	ConvertedPath,
 	RawPath,
 }
 
-func EnsureDir(dirName string) error {
+func ensureDir(dirName string) error {
 	if _, err := os.Stat(dirName); os.IsNotExist(err) {
 		if err := os.MkdirAll(dirName, 0755); err != nil {
 			return fmt.Errorf("error creating directory %s: %w", dirName, err)
@@ -25,4 +25,10 @@ func EnsureDir(dirName string) error {
 	}
 
 	return nil
+}
+
+func EnsureDirectories() {
+	for _, dir := range directories {
+		ensureDir(dir)
+	}
 }
