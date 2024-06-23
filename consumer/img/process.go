@@ -54,7 +54,7 @@ func (svc Service) Process(opts ProcessOpts) error {
 				Ch:           svc.RabbitMQService.Channel,
 				QueueName:    "files_to_process",
 				ExchangeName: "file_exchange",
-				RoutingKey:   "to_Process",
+				RoutingKey:   "to_process",
 				Body:         req,
 			})
 			if err != nil {
