@@ -1,11 +1,9 @@
 package main
 
 import (
-	"github.com/offerni/imagenaerum/rest"
-	"github.com/offerni/imagenaerum/utils"
+	"github.com/offerni/imagenaerum/worker/utils"
 )
 
 func main() {
 	utils.EnsureDirectories()
-	rest.InitializeServer()
 }

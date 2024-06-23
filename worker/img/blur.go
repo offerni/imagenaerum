@@ -10,7 +10,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
-	"github.com/offerni/imagenaerum/utils"
+	"github.com/offerni/imagenaerum/worker/utils"
 )
 
 const maxSizeMB = 5
