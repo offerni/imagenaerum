@@ -1,7 +1,5 @@
 package img
 
-type ImagingClient struct{}
-
 type Service struct {
 }
 

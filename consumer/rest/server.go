@@ -13,21 +13,26 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/joho/godotenv"
+	"github.com/offerni/imagenaerum/consumer/rabbitmq"
 )
 
 const defaultport string = "8080"
 
 type Server struct {
-	HttpSrv *http.Server
-	// ImgService img.Service
+	HttpSrv     *http.Server
+	RabbitMQSvc *rabbitmq.Service
 }
 
 type NewServerOpts struct {
-	HttpSrv *http.Server
-	// ImgService img.Service
+	HttpSrv     *http.Server
+	RabbitMQSvc *rabbitmq.Service
 }
 
-func InitializeServer() {
+type ServerDependecies struct {
+	RabbitMQSvc rabbitmq.Service
+}
+
+func InitializeServer(deps ServerDependecies) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("err loading: %v", err)
@@ -46,13 +51,12 @@ func InitializeServer() {
 	mux.Use(contextMiddleware)
 
 	// new Server
-	// imgService := img.NewService()
 	srv := NewServer(NewServerOpts{
-		// ImgService: *imgService,
 		HttpSrv: &http.Server{
 			Addr:    fmt.Sprintf(":%s", port),
 			Handler: mux,
 		},
+		RabbitMQSvc: &deps.RabbitMQSvc,
 	})
 
 	// routes
@@ -92,7 +96,7 @@ func contextMiddleware(next http.Handler) http.Handler {
 
 func NewServer(opts NewServerOpts) *Server {
 	return &Server{
-		HttpSrv: opts.HttpSrv,
-		// ImgService: opts.ImgService,
+		HttpSrv:     opts.HttpSrv,
+		RabbitMQSvc: opts.RabbitMQSvc,
 	}
 }
