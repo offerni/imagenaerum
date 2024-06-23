@@ -41,8 +41,11 @@ func main() {
 		panic(err)
 	}
 
-	rest.InitializeServer(rest.ServerDependecies{
-		RabbitMQSvc: *rmqSvc,
-		ImgSvc:      *imgSvc,
-	})
+	go func() {
+		rest.InitializeServer(rest.ServerDependecies{
+			RabbitMQSvc: *rmqSvc,
+			ImgSvc:      *imgSvc,
+		})
+	}()
+
 }
