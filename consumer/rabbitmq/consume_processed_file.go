@@ -7,13 +7,13 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type ConsumeConvertedFileOpts struct {
+type ConsumeProcessedFileOpts struct {
 	ExchangeName string
 	QueueName    string
 	RoutingKey   string
 }
 
-func (svc *Service) ConsumeConvertedFile(opts ConsumeConvertedFileOpts) error {
+func (svc *Service) ConsumeProcessedFile(opts ConsumeProcessedFileOpts) error {
 	_, err := svc.Channel.QueueDeclare(
 		opts.QueueName,
 		true,

@@ -12,7 +12,7 @@ import (
 func (srv *Server) FileFetch(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	filePath := filepath.Join(utils.ConvertedPath, id)
+	filePath := filepath.Join(utils.ProcessedPath, id)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		http.Error(w, "File not found", http.StatusNotFound)

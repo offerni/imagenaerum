@@ -52,7 +52,7 @@ func (svc Service) Process(opts ProcessOpts) error {
 
 			err = svc.RabbitMQService.Publish(rabbitmq.PublishOpts{
 				Ch:           svc.RabbitMQService.Channel,
-				QueueName:    "files_to_Process",
+				QueueName:    "files_to_process",
 				ExchangeName: "file_exchange",
 				RoutingKey:   "to_Process",
 				Body:         req,

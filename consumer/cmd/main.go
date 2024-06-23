@@ -13,10 +13,10 @@ func main() {
 	rmqSvc := rabbitmq.Start()
 	go func() {
 		defer rmqSvc.Close()
-		if err := rmqSvc.ConsumeConvertedFile(rabbitmq.ConsumeConvertedFileOpts{
-			QueueName:    "converted_files",
+		if err := rmqSvc.ConsumeProcessedFile(rabbitmq.ConsumeProcessedFileOpts{
+			QueueName:    "processed_files",
 			ExchangeName: "file_exchange",
-			RoutingKey:   "converted",
+			RoutingKey:   "processed",
 		}); err != nil {
 			panic(err)
 		}
