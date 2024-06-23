@@ -39,7 +39,6 @@ func main() {
 			ImgSvc:      *imgSvc,
 		})
 	}()
-	wg.Wait()
 
 	// Dumper so we can see the messages coming back from the worker
 	go func() {
@@ -53,4 +52,5 @@ func main() {
 		}
 	}()
 
+	wg.Wait()
 }

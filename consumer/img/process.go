@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/offerni/imagenaerum/consumer/rabbitmq"
@@ -34,7 +33,6 @@ func (svc Service) Process(opts ProcessOpts) error {
 		wg.Add(1)
 		go func(file *multipart.FileHeader) {
 			defer wg.Done()
-			fmt.Printf("Processing file: %s at: %v\n", file.Filename, time.Now().Format("2006-01-02 15:04:05.000"))
 			file, err := svc.processAndStoreFile(file)
 			if err != nil {
 				errCh <- err
