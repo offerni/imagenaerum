@@ -2,6 +2,8 @@ package rabbitmq
 
 import "log"
 
+const Url string = "amqp://guest:guest@localhost:5672/"
+
 func Start() *Service {
 	rabbitMQSvc, err := NewService(NewServiceOpts{
 		Url: Url,

@@ -1,27 +1,21 @@
 package rabbitmq
 
 import (
-	"context"
-	"sync"
-
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type ConsumeOpts struct {
+type PublishOpts struct {
+	Body         []byte
 	Ch           *amqp.Channel
-	Consumer     string
 	ExchangeName string
-	Out          chan<- amqp.Delivery
 	QueueName    string
 	RoutingKey   string
 }
 
-func (svc Service) Consume(opts ConsumeOpts) error {
-	msgs, err := opts.Ch.ConsumeWithContext(
-		context.Background(),
+func (svc Service) Publish(opts PublishOpts) error {
+	_, err := svc.Channel.QueueDeclare(
 		opts.QueueName,
-		opts.Consumer,
-		false,
+		true,
 		false,
 		false,
 		false,
@@ -46,7 +40,7 @@ func (svc Service) Consume(opts ConsumeOpts) error {
 
 	err = svc.Channel.QueueBind(
 		opts.QueueName,
-		opts.RoutingKey,
+		"to_convert",
 		opts.ExchangeName,
 		false,
 		nil,
@@ -55,18 +49,18 @@ func (svc Service) Consume(opts ConsumeOpts) error {
 		return err
 	}
 
-	var wg sync.WaitGroup
-	go func() {
-		defer close(opts.Out)
-		for msg := range msgs {
-			wg.Add(1)
-			go func(m amqp.Delivery) {
-				defer wg.Done()
-				opts.Out <- m
-			}(msg)
-		}
-	}()
-	wg.Wait()
+	err = opts.Ch.Publish(
+		opts.ExchangeName,
+		opts.RoutingKey,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        opts.Body,
+		})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

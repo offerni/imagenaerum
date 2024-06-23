@@ -7,9 +7,15 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func (svc *Service) ConsumeConvertedFile(queueName string) error {
+type ConsumeConvertedFileOpts struct {
+	ExchangeName string
+	QueueName    string
+	RoutingKey   string
+}
+
+func (svc *Service) ConsumeConvertedFile(opts ConsumeConvertedFileOpts) error {
 	_, err := svc.Channel.QueueDeclare(
-		queueName,
+		opts.QueueName,
 		true,
 		false,
 		false,
@@ -22,10 +28,12 @@ func (svc *Service) ConsumeConvertedFile(queueName string) error {
 
 	msgsChannel := make(chan amqp.Delivery)
 	if err := svc.Consume(ConsumeOpts{
-		Ch:       svc.Channel,
-		Out:      msgsChannel,
-		QName:    queueName,
-		Consumer: "img-consumer",
+		Ch:           svc.Channel,
+		Consumer:     "img-consumer",
+		ExchangeName: opts.ExchangeName,
+		Out:          msgsChannel,
+		QueueName:    opts.QueueName,
+		RoutingKey:   opts.RoutingKey,
 	}); err != nil {
 		panic(err)
 	}

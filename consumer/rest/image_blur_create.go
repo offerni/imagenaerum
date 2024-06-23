@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/offerni/imagenaerum/consumer/rabbitmq"
 )
 
 func (srv *Server) ImageBlurCreate(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +25,16 @@ func (srv *Server) ImageBlurCreate(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	// Call RabbitMQ Handler here
+	err = srv.RabbitMQSvc.Publish(rabbitmq.PublishOpts{
+		Ch:           srv.RabbitMQSvc.Channel,
+		QueueName:    "files_to_convert",
+		ExchangeName: "file_exchange",
+		RoutingKey:   "to_convert",
+		Body:         []byte("Hello World"),
+	})
+	if err != nil {
+		log.Println(err)
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 }

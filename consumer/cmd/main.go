@@ -10,11 +10,16 @@ func main() {
 	utils.EnsureDirectories()
 
 	rmqSvc := rabbitmq.Start()
-	defer rmqSvc.Close()
-
-	if err := rmqSvc.ConsumeConvertedFile("test"); err != nil {
-		panic(err)
-	}
+	go func() {
+		defer rmqSvc.Close()
+		if err := rmqSvc.ConsumeConvertedFile(rabbitmq.ConsumeConvertedFileOpts{
+			QueueName:    "converted_files",
+			ExchangeName: "files_exchange",
+			RoutingKey:   "converted",
+		}); err != nil {
+			panic(err)
+		}
+	}()
 
 	rest.InitializeServer(rest.ServerDependecies{
 		RabbitMQSvc: *rmqSvc,

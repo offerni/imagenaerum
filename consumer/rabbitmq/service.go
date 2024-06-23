@@ -15,8 +15,6 @@ type NewServiceOpts struct {
 	Url string
 }
 
-const Url string = "amqp://guest:guest@localhost:5672/"
-
 func NewService(opts NewServiceOpts) (*Service, error) {
 	conn, err := amqp.Dial(opts.Url)
 	if err != nil {
