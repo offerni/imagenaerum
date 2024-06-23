@@ -5,6 +5,6 @@ import (
 )
 
 func initializeRoutes(mux *chi.Mux, srv Server) {
-	mux.Post("/blur", srv.ImageBlurCreate)
+	mux.Post("/process", srv.ImageProcess)
 	mux.Get("/files/{id}", srv.FileFetch)
 }

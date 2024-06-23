@@ -40,7 +40,7 @@ func (svc Service) Publish(opts PublishOpts) error {
 
 	err = svc.Channel.QueueBind(
 		opts.QueueName,
-		"to_convert",
+		opts.RoutingKey,
 		opts.ExchangeName,
 		false,
 		nil,
@@ -55,7 +55,7 @@ func (svc Service) Publish(opts PublishOpts) error {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: "application/json",
 			Body:        opts.Body,
 		})
 	if err != nil {
