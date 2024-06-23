@@ -1,6 +1,10 @@
 package main
 
 import (
+	"log"
+	"os"
+
+	"github.com/joho/godotenv"
 	"github.com/offerni/imagenaerum/consumer/img"
 	"github.com/offerni/imagenaerum/consumer/rabbitmq"
 	"github.com/offerni/imagenaerum/consumer/rest"
@@ -10,7 +14,15 @@ import (
 func main() {
 	utils.EnsureDirectories()
 
-	rmqSvc := rabbitmq.Start()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("err loading: %v", err)
+	}
+	rabbitmqUrl := os.Getenv("RABBITMQ_URL")
+
+	rmqSvc := rabbitmq.Start(rabbitmqUrl)
+
+	// Dumper so we can see the messages coming back from the worker
 	go func() {
 		defer rmqSvc.Close()
 		if err := rmqSvc.ConsumeProcessedFile(rabbitmq.ConsumeProcessedFileOpts{

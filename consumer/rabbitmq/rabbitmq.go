@@ -2,11 +2,9 @@ package rabbitmq
 
 import "log"
 
-const Url string = "amqp://guest:guest@localhost:5672/"
-
-func Start() *Service {
+func Start(url string) *Service {
 	rabbitMQSvc, err := NewService(NewServiceOpts{
-		Url: Url,
+		Url: url,
 	})
 	if err != nil {
 		log.Fatalf("%s: %s", "Failed to initialize RabbitMQ service", err)

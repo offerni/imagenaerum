@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/joho/godotenv"
 	"github.com/offerni/imagenaerum/consumer/img"
 	"github.com/offerni/imagenaerum/consumer/rabbitmq"
 )
@@ -37,11 +36,6 @@ type ServerDependecies struct {
 }
 
 func InitializeServer(deps ServerDependecies) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("err loading: %v", err)
-	}
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultport
@@ -69,7 +63,7 @@ func InitializeServer(deps ServerDependecies) {
 
 	go func() {
 		fmt.Printf("HTTP Server started on port %s\n", port)
-		err = srv.HttpSrv.ListenAndServe()
+		err := srv.HttpSrv.ListenAndServe()
 		if err != nil && http.ErrServerClosed != err {
 			log.Fatalf("Failed to start server: %v", err)
 		}
