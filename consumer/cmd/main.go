@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"sync"
 
 	"github.com/joho/godotenv"
 	"github.com/offerni/imagenaerum/consumer/img"
@@ -22,6 +23,24 @@ func main() {
 
 	rmqSvc := rabbitmq.Start(rabbitmqUrl)
 
+	imgSvc, err := img.NewService(img.NewServiceOpts{
+		RabbitMQSvc: rmqSvc,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		rest.InitializeServer(rest.ServerDependecies{
+			RabbitMQSvc: *rmqSvc,
+			ImgSvc:      *imgSvc,
+		})
+	}()
+	wg.Wait()
+
 	// Dumper so we can see the messages coming back from the worker
 	go func() {
 		defer rmqSvc.Close()
@@ -32,20 +51,6 @@ func main() {
 		}); err != nil {
 			panic(err)
 		}
-	}()
-
-	imgSvc, err := img.NewService(img.NewServiceOpts{
-		RabbitMQSvc: rmqSvc,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	go func() {
-		rest.InitializeServer(rest.ServerDependecies{
-			RabbitMQSvc: *rmqSvc,
-			ImgSvc:      *imgSvc,
-		})
 	}()
 
 }
