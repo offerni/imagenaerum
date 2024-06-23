@@ -1,8 +1,10 @@
 package rest
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func (srv *Server) ImageBlurCreate(w http.ResponseWriter, r *http.Request) {
@@ -12,19 +14,16 @@ func (srv *Server) ImageBlurCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// files := r.MultipartForm.File["files"]
-	// sigma := r.FormValue("sigma")
-	// sigmaFoat, err := strconv.ParseFloat(sigma, 64)
-	// if err != nil {
-	// 	log.Println(err)
-	// }
+	fmt.Println("hello!!")
 
-	// if err := srv.ImgService.Blur(img.BlurOpts{
-	// 	Files: files,
-	// 	Sigma: sigmaFoat,
-	// }); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// }
+	_ = r.MultipartForm.File["files"]
+	sigma := r.FormValue("sigma")
+	_, err := strconv.ParseFloat(sigma, 64)
+	if err != nil {
+		log.Println(err)
+	}
+
+	// Call RabbitMQ Handler here
 
 	w.WriteHeader(http.StatusNoContent)
 }
