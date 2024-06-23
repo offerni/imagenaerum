@@ -6,11 +6,11 @@ import (
 	"os"
 )
 
-const ConvertedPath string = "../_files/converted"
+const ProcessedPath string = "../_files/processed"
 const RawPath string = "../_files/raw"
 
 var directories = []string{
-	ConvertedPath,
+	ProcessedPath,
 	RawPath,
 }
 

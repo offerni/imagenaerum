@@ -76,10 +76,10 @@ func (svc Service) processFileBlur(file *multipart.FileHeader, sigma float64) er
 	}
 
 	fileName := uuid.New().String()
-	fileCOnvertedPath := fmt.Sprintf("%s/%s.jpg", utils.ConvertedPath, fileName)
+	fileProcesseddPath := fmt.Sprintf("%s/%s.jpg", utils.ProcessedPath, fileName)
 
 	img := imaging.Blur(src, sigma)
-	if err := imaging.Save(img, fileCOnvertedPath); err != nil {
+	if err := imaging.Save(img, fileProcesseddPath); err != nil {
 		return err
 	}
 
