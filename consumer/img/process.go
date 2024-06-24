@@ -16,8 +16,12 @@ import (
 )
 
 type ProcessOpts struct {
-	Files  []*multipart.FileHeader
-	Params string
+	Blur       *string
+	CropAnchor *string
+	Files      []*multipart.FileHeader
+	Grayscale  *string
+	Invert     *string
+	Resize     *string
 }
 
 const maxSizeMB = 10
@@ -32,7 +36,7 @@ func (svc Service) Process(opts ProcessOpts) error {
 
 	var mu sync.Mutex
 
-	errCh := make(chan error, len(opts.Files)) // Buffer size to avoid blocking
+	errCh := make(chan error, len(opts.Files))
 
 	for _, file := range opts.Files {
 		wg.Add(1)
@@ -46,10 +50,12 @@ func (svc Service) Process(opts ProcessOpts) error {
 			}
 
 			req, err := json.Marshal(ProcessRequest{
-				File: processedFile.Filename,
-				Params: map[string]string{
-					"sigma": opts.Params,
-				},
+				Blur:       opts.Blur,
+				CropAnchor: opts.CropAnchor,
+				File:       processedFile.Filename,
+				Grayscale:  opts.Grayscale,
+				Invert:     opts.Invert,
+				Resize:     opts.Resize,
 			})
 			if err != nil {
 				errCh <- fmt.Errorf("error json.Marshal(ProcessRequest %v", err)
@@ -129,10 +135,6 @@ func (opts ProcessOpts) Validate() error {
 		return ErrNoFiles
 	}
 
-	if opts.Params == "" {
-		return ErrNoParam
-	}
-
 	for _, file := range opts.Files {
 		if file.Size > maxSizeBytes {
 			return ErrInvalidSize
@@ -143,6 +145,10 @@ func (opts ProcessOpts) Validate() error {
 }
 
 type ProcessRequest struct {
-	File   string            `json:"file"`
-	Params map[string]string `json:"params"`
+	Blur       *string `json:"blur"`
+	CropAnchor *string `json:"crop_anchor"`
+	File       string  `json:"file"`
+	Grayscale  *string `json:"grayscale"`
+	Invert     *string `json:"invert"`
+	Resize     *string `json:"resize"`
 }

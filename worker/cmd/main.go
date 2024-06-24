@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/davecgh/go-spew/spew"
 	"github.com/joho/godotenv"
 	"github.com/offerni/imagenaerum/worker/img"
 	"github.com/offerni/imagenaerum/worker/rabbitmq"

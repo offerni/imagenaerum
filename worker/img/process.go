@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 
 	"github.com/disintegration/imaging"
@@ -51,11 +52,12 @@ func (svc *Service) Process() error {
 
 			filePath := filepath.Join(utils.RawPath, resp.File)
 			if err := svc.processFile(processFileOpts{
-				File: filePath,
-				Params: processFileOptsParams{
-					Effect: "blur",
-					Value:  5,
-				},
+				Blur:       resp.Blur,
+				CropAnchor: resp.CropAnchor,
+				File:       filePath,
+				Grayscale:  resp.Grayscale,
+				Invert:     resp.Invert,
+				Resize:     resp.Resize,
 			}); err != nil {
 				fmt.Printf("error processing %s", err.Error())
 				errorsChannel <- err
@@ -87,9 +89,44 @@ func (svc Service) processFile(opts processFileOpts) error {
 	fileProcessedPath := fmt.Sprintf("%s/%s", utils.ProcessedPath, fileName)
 
 	var img *image.NRGBA
-	switch opts.Params.Effect {
-	case "blur":
-		img = imaging.Blur(src, 5)
+
+	if opts.Blur != nil {
+		blurValue, err := strconv.ParseFloat(*opts.Blur, 64)
+		if err != nil {
+			return err
+		}
+		img = imaging.Blur(src, blurValue)
+	}
+
+	if opts.CropAnchor != nil {
+		convertedValues, err := utils.ConvertToIntSlice(*opts.CropAnchor, ",")
+		if err != nil {
+			return err
+		}
+		width := convertedValues[0]
+		height := convertedValues[1]
+
+		img = imaging.CropAnchor(src, width, height, imaging.Center)
+	}
+
+	if opts.Resize != nil {
+		convertedValues, err := utils.ConvertToIntSlice(*opts.Resize, ",")
+		if err != nil {
+			return err
+		}
+
+		width := convertedValues[0]
+		height := convertedValues[1]
+
+		img = imaging.Resize(src, width, height, imaging.Lanczos)
+	}
+
+	if opts.Grayscale != nil {
+		img = imaging.Grayscale(src)
+	}
+
+	if opts.Invert != nil {
+		img = imaging.Invert(src)
 	}
 
 	if err := imaging.Save(img, fileProcessedPath); err != nil {
@@ -132,18 +169,21 @@ func (svc Service) processFile(opts processFileOpts) error {
 }
 
 type processFileOpts struct {
-	File   string
-	Params processFileOptsParams
-}
-
-type processFileOptsParams struct {
-	Effect string
-	Value  any
+	Blur       *string
+	CropAnchor *string
+	File       string
+	Grayscale  *string
+	Invert     *string
+	Resize     *string
 }
 
 type ProcessResponse struct {
-	File   string            `json:"file"`
-	Params map[string]string `json:"params"`
+	Blur       *string `json:"blur"`
+	CropAnchor *string `json:"crop_anchor"`
+	File       string  `json:"file"`
+	Grayscale  *string `json:"grayscale"`
+	Invert     *string `json:"invert"`
+	Resize     *string `json:"resize"`
 }
 
 type ProcessedRequest struct {
