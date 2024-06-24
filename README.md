@@ -3,7 +3,8 @@
 
 This service processes images with various transformations such as blur, crop, resize, grayscale, and invert. It uses RabbitMQ for message queuing and Docker Compose for container orchestration.
 
-**Disclaimer This is still a work in progress and there are some validations and error handling missing.**
+### Disclaimer
+***This is a work in progress and may be missing some validations and error handling.***
 
 ## Accepted Parameters
 
