@@ -1,5 +1,5 @@
 # Imagenaerum 
-## Multithreaded image processing using RabbitMQ
+## Multithreaded image processing servers using RabbitMQ
 
 This service processes images with various transformations such as blur, crop, resize, grayscale, and invert. It uses RabbitMQ for message queuing and Docker Compose for container orchestration.
 
