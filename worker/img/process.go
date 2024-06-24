@@ -3,7 +3,6 @@ package img
 import (
 	"encoding/json"
 	"fmt"
-	"image"
 	"log"
 	"os"
 	"path/filepath"
@@ -88,14 +87,12 @@ func (svc Service) processFile(opts processFileOpts) error {
 	fileName := fmt.Sprintf("%s%s", uuid.New().String(), fileExtension)
 	fileProcessedPath := fmt.Sprintf("%s/%s", utils.ProcessedPath, fileName)
 
-	var img *image.NRGBA
-
 	if opts.Blur != nil {
 		blurValue, err := strconv.ParseFloat(*opts.Blur, 64)
 		if err != nil {
 			return err
 		}
-		img = imaging.Blur(src, blurValue)
+		src = imaging.Blur(src, blurValue)
 	}
 
 	if opts.CropAnchor != nil {
@@ -106,7 +103,7 @@ func (svc Service) processFile(opts processFileOpts) error {
 		width := convertedValues[0]
 		height := convertedValues[1]
 
-		img = imaging.CropAnchor(src, width, height, imaging.Center)
+		src = imaging.CropAnchor(src, width, height, imaging.Center)
 	}
 
 	if opts.Resize != nil {
@@ -118,18 +115,18 @@ func (svc Service) processFile(opts processFileOpts) error {
 		width := convertedValues[0]
 		height := convertedValues[1]
 
-		img = imaging.Resize(src, width, height, imaging.Lanczos)
+		src = imaging.Resize(src, width, height, imaging.Lanczos)
 	}
 
 	if opts.Grayscale != nil {
-		img = imaging.Grayscale(src)
+		src = imaging.Grayscale(src)
 	}
 
 	if opts.Invert != nil {
-		img = imaging.Invert(src)
+		src = imaging.Invert(src)
 	}
 
-	if err := imaging.Save(img, fileProcessedPath); err != nil {
+	if err := imaging.Save(src, fileProcessedPath); err != nil {
 		return err
 	}
 
