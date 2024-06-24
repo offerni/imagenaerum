@@ -3,6 +3,7 @@ package img
 import (
 	"encoding/json"
 	"fmt"
+	"image"
 	"log"
 	"os"
 	"path/filepath"
@@ -31,30 +32,39 @@ func (svc *Service) Process() error {
 		return err
 	}
 
+	defer svc.RabbitmqService.Close()
+
 	var wg sync.WaitGroup
-	go func() {
-		for msg := range msgsChannel {
-			wg.Add(1)
-			go func(m amqp.Delivery) {
-				defer wg.Done()
-				m.Ack(false)
 
-				var resp ProcessResponse
-				if err := json.Unmarshal(m.Body, &resp); err != nil {
-					errorsChannel <- err
-					return
-				}
+	for msg := range msgsChannel {
+		wg.Add(1)
+		go func(m amqp.Delivery) {
+			defer wg.Done()
+			m.Ack(false)
 
-				filePath := filepath.Join(utils.RawPath, resp.File)
-				if err := svc.processFile(filePath, 5); err != nil {
-					errorsChannel <- err
-					return
-				}
-			}(msg)
-		}
-		wg.Wait()
-		close(errorsChannel)
-	}()
+			var resp ProcessResponse
+			if err := json.Unmarshal(m.Body, &resp); err != nil {
+				fmt.Printf("error unmarshalling %s", err.Error())
+				errorsChannel <- err
+				return
+			}
+
+			filePath := filepath.Join(utils.RawPath, resp.File)
+			if err := svc.processFile(processFileOpts{
+				File: filePath,
+				Params: processFileOptsParams{
+					Effect: "blur",
+					Value:  5,
+				},
+			}); err != nil {
+				fmt.Printf("error processing %s", err.Error())
+				errorsChannel <- err
+				return
+			}
+		}(msg)
+	}
+	wg.Wait()
+	close(errorsChannel)
 
 	// check for errors in the channel
 	for err := range errorsChannel {
@@ -66,23 +76,28 @@ func (svc *Service) Process() error {
 	return nil
 }
 
-func (svc Service) processFile(fileRawPath string, sigma float64) error {
-
-	src, err := imaging.Open(fileRawPath)
+func (svc Service) processFile(opts processFileOpts) error {
+	src, err := imaging.Open(opts.File)
 	if err != nil {
 		return err
 	}
 
-	fileName := fmt.Sprintf("%s.jpg", uuid.New().String())
+	fileExtension := filepath.Ext(opts.File)
+	fileName := fmt.Sprintf("%s%s", uuid.New().String(), fileExtension)
 	fileProcessedPath := fmt.Sprintf("%s/%s", utils.ProcessedPath, fileName)
 
-	img := imaging.Blur(src, sigma)
+	var img *image.NRGBA
+	switch opts.Params.Effect {
+	case "blur":
+		img = imaging.Blur(src, 5)
+	}
+
 	if err := imaging.Save(img, fileProcessedPath); err != nil {
 		return err
 	}
 
 	// removing files at the end of the processing
-	if err := os.Remove(fileRawPath); err != nil {
+	if err := os.Remove(opts.File); err != nil {
 		return err
 	}
 
@@ -92,15 +107,38 @@ func (svc Service) processFile(fileRawPath string, sigma float64) error {
 	if err != nil {
 		return err
 	}
+
+	var mu sync.Mutex
+
+	// new channel to prevent threads sharing the same channel on publish
+	ch, err := svc.RabbitmqService.NewChannel()
+	if err != nil {
+		return fmt.Errorf("error creating channel %v", err)
+	}
+
+	defer ch.Close()
+
+	mu.Lock()
 	svc.RabbitmqService.Publish(rabbitmq.PublishOpts{
 		Body:         req,
-		Ch:           svc.RabbitmqService.Channel,
+		Ch:           ch,
 		ExchangeName: "file_exchange",
 		QueueName:    "processed_files",
 		RoutingKey:   "processed",
 	})
+	mu.Unlock()
 
 	return nil
+}
+
+type processFileOpts struct {
+	File   string
+	Params processFileOptsParams
+}
+
+type processFileOptsParams struct {
+	Effect string
+	Value  any
 }
 
 type ProcessResponse struct {

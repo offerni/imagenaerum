@@ -33,3 +33,7 @@ func NewService(opts NewServiceOpts) (*Service, error) {
 		Channel: ch,
 	}, nil
 }
+
+func (s *Service) NewChannel() (*amqp.Channel, error) {
+	return s.Conn.Channel()
+}

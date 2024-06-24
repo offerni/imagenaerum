@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -19,7 +20,7 @@ type ProcessOpts struct {
 	Params string
 }
 
-const maxSizeMB = 5
+const maxSizeMB = 10
 const maxSizeBytes = maxSizeMB * 1024 * 1024
 
 func (svc Service) Process(opts ProcessOpts) error {
@@ -28,37 +29,58 @@ func (svc Service) Process(opts ProcessOpts) error {
 	}
 
 	var wg sync.WaitGroup
-	errCh := make(chan error)
+
+	var mu sync.Mutex
+
+	errCh := make(chan error, len(opts.Files)) // Buffer size to avoid blocking
+
 	for _, file := range opts.Files {
 		wg.Add(1)
-		go func(file *multipart.FileHeader) {
+		go func(f *multipart.FileHeader) {
 			defer wg.Done()
-			file, err := svc.processAndStoreFile(file)
+
+			processedFile, err := svc.processAndStoreFile(f)
 			if err != nil {
-				errCh <- err
+				errCh <- fmt.Errorf("error svc.processAndStoreFile %v", err)
+				return
 			}
 
 			req, err := json.Marshal(ProcessRequest{
-				File: file.Filename,
+				File: processedFile.Filename,
 				Params: map[string]string{
 					"sigma": opts.Params,
 				},
 			})
 			if err != nil {
-				errCh <- err
+				errCh <- fmt.Errorf("error json.Marshal(ProcessRequest %v", err)
+				return
 			}
 
+			ch, err := svc.RabbitMQService.NewChannel()
+			if err != nil {
+				errCh <- fmt.Errorf("error creating channel %v", err)
+				return
+			}
+			defer func() {
+				if err := ch.Close(); err != nil {
+					log.Printf("error closing channel: %v", err)
+				}
+			}()
+
+			// adding mutex here publishing is not thread-safe
+			mu.Lock()
 			err = svc.RabbitMQService.Publish(rabbitmq.PublishOpts{
-				Ch:           svc.RabbitMQService.Channel,
+				Ch:           ch,
 				QueueName:    "files_to_process",
 				ExchangeName: "file_exchange",
 				RoutingKey:   "to_process",
 				Body:         req,
 			})
 			if err != nil {
-				errCh <- err
+				errCh <- fmt.Errorf("error publishing message: %v", err)
+				return
 			}
-
+			mu.Unlock()
 		}(file)
 	}
 
@@ -68,10 +90,10 @@ func (svc Service) Process(opts ProcessOpts) error {
 		close(errCh)
 	}()
 
-	// check for errors in the channel
+	// Check for errors in the channel
 	for err := range errCh {
 		if err != nil {
-			return err
+			log.Printf("Errors Processing file: %s", err.Error())
 		}
 	}
 
